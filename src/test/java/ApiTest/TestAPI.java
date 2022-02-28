@@ -1,63 +1,36 @@
 package ApiTest;
-import io.restassured.RestAssured;
-import io.restassured.path.json.JsonPath;
-import io.restassured.response.Response;
-import io.restassured.response.ValidatableResponse;
+import DataHelper.DataHelper;
+import io.restassured.builder.RequestSpecBuilder;
+import io.restassured.specification.RequestSpecification;
 import org.junit.Test;
 import io.restassured.http.ContentType;
-
-import java.util.List;
-
-import static io.restassured.RestAssured.get;
 import static io.restassured.RestAssured.given;
-import static io.restassured.path.json.JsonPath.from;
-import static java.lang.Thread.sleep;
 import static org.hamcrest.Matchers.*;
 
 public class TestAPI {
-    public String getUri() {
-        String Uri = "";
-        for(int i=1; i<12; i++) {
-            String number = Integer.toString(i);
-            Uri = "https://reqres.in/api/users/" + number;
-            String a = given()
-                    .contentType(ContentType.JSON)
-                    .get(Uri).then()
-                    .statusCode(200)
-                    .extract().asString();
-            if (a.contains("\"first_name\":\"Michael\",\"last_name\":\"Lawson\"")) {
-                return Uri;
-            }
-        }
-        return Uri;
-    }
+    RequestSpecification requestSpec = new RequestSpecBuilder()
+            .setBaseUri("https://reqres.in/api")
+            .setContentType(ContentType.JSON)
+            .build();
 
     @Test
     public void checkGeorgeBluthMail() {
-        final String BASE_URI = "https://reqres.in/api";
-        RestAssured.
-                given()
-                .baseUri(BASE_URI)
-                .contentType(ContentType.JSON)
+        given()
+                .spec(requestSpec)
                 .get("/users")
                 .then()
                 .statusCode(200)
-                .body("data.findAll {it.first_name == \"George\" && it.last_name == \"Bluth\" }.email", hasItem("george.bluth@reqres.in"));
-
+                .body("data.findAll {it.first_name == 'George' && it.last_name == 'Bluth' }.email", hasItem("george.bluth@reqres.in"));
     }
 
     @Test
-    public void checkMichaelLawsonhMail() throws InterruptedException {
-        String Uri = getUri();
-        RestAssured.
-                given()
-                .contentType(ContentType.JSON)
-                .get("https://reqres.in/api/users/7")
+    public void checkMichaelLawsonhMail() {
+        DataHelper dataHelper = new DataHelper();
+        given()
+                .spec(requestSpec)
+                .get(dataHelper.getUriFromPaginationPage("Michael", "Lawson"))
                 .then()
                 .statusCode(200)
                 .body("data.email", equalTo("michael.lawson@reqres.in"));
-
     }
-
-
 }
